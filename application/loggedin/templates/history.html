@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    History
+{% endblock %}
+
+{% block main %}
+
+  {% if transactions %}
+    <table class="table table-dark">
+      <thead>
+        <tr>
+          <th scope="col">Symbol</th>
+          <th scope="col">Shares</th>
+          <th scope="col">Cost</th>
+          <th scope="col">Transaction time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for transaction in transactions %}
+        <tr>
+          <td><span class="col_prefix">Symbol:</span>&nbsp;{{ transaction.symbol }}</td>
+          <td><span class="col_prefix">Shares:</span>&nbsp;{{ transaction.shares }}</td>
+          <td><span class="col_prefix">Price:</span>&nbsp;{{ transaction.cost | usd }}</td>
+          <td><span class="col_prefix">Transaction time:</span>&nbsp;{{ transaction.transaction_time }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No history available. Please <a href="{{ url_for('.loggedin_bp.buy') }}">buy</a> some shares.</p>
+  {% endif %}  
+
+{% endblock %}

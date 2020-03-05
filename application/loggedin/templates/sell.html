@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Sell
+{% endblock %}
+
+{% block main %}
+    <form action="{{ url_for('loggedin_bp.sell') }}" method="POST" id="sell-form">
+        {{ form.csrf_token }}
+        <div class="form-group">
+            {{ form.symbol(class="custom-select w-25") }}
+        </div>
+        <div class="form-group">
+            {{ form.shares(class="form-control", placeholder="Shares", autocomplete="off") }}
+            <ul>
+                {% if form.shares.errors %}
+                    {% for error in form.shares.errors %}
+                        <li><span class="error-message">{{ error }}</span></li>
+                    {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+{% endblock %}

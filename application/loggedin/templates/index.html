@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Portfolio
+{% endblock %}
+
+{% block main %}
+
+<div class="table-responsive">
+  <table class="table table-dark">
+    <thead>
+      <tr>
+        <th scope="col">Symbol</th>
+        <th scope="col">Name</th>
+        <th scope="col">Shares</th>
+        <th scope="col">Price</th>
+        <th scope="col">Total</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+
+    <tfoot id="bottom_row">
+      <tr>
+        <td>Grand total</td>
+        <td colspan="3"></td>
+        <td>{{ grand_total | usd }}</td>
+        <td></td>
+      </tr>
+    </tfoot>
+
+    <tbody>
+      {% for transaction in transactions %}
+        <tr>
+          <td class="symbol_row">
+            <span class="col_prefix">Symbol:</span>&nbsp;
+            <span class="symbol">{{ transaction.symbol }}</span>
+          </td>
+          <td><span class="col_prefix">Name: </span>&nbsp;{{ transaction.name }}</td>
+          <td><span class="col_prefix">Shares: </span>&nbsp;{{ transaction.shares }}</td>
+          <td><span class="col_prefix">Price: </span>&nbsp;{{ transaction.price | usd }}</td>
+          <td><span class="col_prefix">Total: </span>&nbsp;{{ transaction.total | usd }}</td>
+          <td>
+            <button type="button" class="btn btn-primary buy_button" name="buy_this">Buy</button>
+            <button type="button" class="btn btn-primary sell_button" name="sell_this">Sell</button>
+          </td>
+        </tr>
+      {% endfor %}
+      <tr id="cash">
+        <td>Remaining cash</td>
+        <td colspan="3"></td>
+        <td>{{ current_cash | usd }}</td>
+        <td></td>
+      </tr>
+      <tr id="cash_small">
+        <td>Remaining cash: {{ current_cash | usd }}</td>
+        <td>Grand Total: {{ grand_total | usd }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
