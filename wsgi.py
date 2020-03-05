@@ -5,7 +5,6 @@ from werkzeug.exceptions import default_exceptions, HTTPException, InternalServe
 from application.helpers import sorry
 
 app = create_app()
-app.app_context().push()
 
 # Make sure API key is set
 if not os.environ.get("API_KEY"):
