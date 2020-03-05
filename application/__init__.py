@@ -26,6 +26,9 @@ def create_app():
 
     with app.app_context():
 
+        # Import Models
+        from .models import User, Transaction, History, ResetPassword
+
         # Create tables for models
         db.create_all()
 

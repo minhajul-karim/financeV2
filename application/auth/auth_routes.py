@@ -55,7 +55,7 @@ def register():
         db.session.close()
 
         # Redirect user to home page
-        return redirect(url_for("home"))
+        return redirect(url_for("loggedin_bp.home"))
         # return "Return to homepage"
 
     return render_template("register.html", form=form)

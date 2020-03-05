@@ -1,5 +1,8 @@
+"""Configularions."""
+
 import os
 from tempfile import mkdtemp
+
 
 class Config:
     """Set Flask configuration vars."""
@@ -10,7 +13,7 @@ class Config:
 
     # Database
     database_file = os.environ.get("DATABASE_URL")
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URI")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Email
@@ -20,7 +23,7 @@ class Config:
     MAIL_USE_SSL = True
     MAIL_USERNAME = os.environ.get("MAIL_ID")
     MAIL_PASSWORD = os.environ.get("MAIL_PASS")
-    
+
     # Session
     SESSION_FILE_DIR = mkdtemp()
     SESSION_PERMANENT = False
