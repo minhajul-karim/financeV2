@@ -21,7 +21,6 @@ loggedin_bp.add_app_template_filter(usd)
 @login_required
 def home():
     """Show portfolio of stocks."""
-    db.session.close()
     grand_total = 0
 
     # List of transactions of a user
