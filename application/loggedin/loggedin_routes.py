@@ -25,8 +25,11 @@ def home():
     grand_total = 0
 
     # List of transactions of a user
+    # transactions = Transaction.query.filter_by(
+    #     user_id=session["user_id"]).order_by(Transaction.symbol.asc()).all()
+
     transactions = Transaction.query.filter_by(
-        user_id=session["user_id"]).order_by(Transaction.symbol.asc()).all()
+        user_id=session["user_id"]).all()
 
     if transactions:
         for transaction in transactions:
