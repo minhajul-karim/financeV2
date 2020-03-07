@@ -21,6 +21,7 @@ loggedin_bp.add_app_template_filter(usd)
 @login_required
 def home():
     """Show portfolio of stocks."""
+    db.session.close()
     grand_total = 0
 
     # List of transactions of a user
@@ -28,7 +29,6 @@ def home():
         user_id=session["user_id"]).order_by(Transaction.symbol.asc()).all()
 
     if transactions:
-        """Modify transactions object to store name, price and total amount of a stock"""
         for transaction in transactions:
             # Get information about a stock
             info = lookup(transaction.symbol)

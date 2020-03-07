@@ -1,5 +1,5 @@
 # Finance V2.0
-*This project is an enhancement of Finance, a CS50X assingment.*
+*This project is an enhancement of Finance, a CS50X assignment.*
 
 **The Challenge:**
 The description of this project can be found [here](https://docs.cs50.net/2019/x/psets/8/finance/finance.html#background)
