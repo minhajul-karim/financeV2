@@ -12,9 +12,9 @@ class Config:
     TEMPLATES_AUTO_RELOAD = True
 
     # Database
-    # database_file = os.environ.get("DATABASE_URL")
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_POOL_SIZE = 0
 
     # Email
     DEBUG = True
