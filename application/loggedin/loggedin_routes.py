@@ -1,6 +1,7 @@
 """application/init."""
 
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from werkzeug.exceptions import InternalServerError
 from dateutil import tz
 from ..helpers import login_required, lookup, usd, sorry
 from ..models import User, Transaction, History
@@ -42,13 +43,19 @@ def home():
                     transaction.total = total_per_stock
 
         # Check user's available balance
-        current_cash = (User.query.filter_by(id=session["user_id"]).first()).cash
+        current_cash = (User.query.filter_by(
+            id=session["user_id"]).first()).cash
         grand_total += current_cash
 
         # Render index template
-        return render_template("index.html", transactions=transactions, current_cash=current_cash, grand_total=grand_total)
-    except Exception as e:
-        return str(e)
+        return render_template("index.html",
+                               transactions=transactions,
+                               current_cash=current_cash,
+                               grand_total=grand_total)
+
+    except InternalServerError:
+        # return sorry("something is broken! Please consider reloading.")
+        pass
 
 
 @loggedin_bp.route("/quote", methods=["GET", "POST"])
