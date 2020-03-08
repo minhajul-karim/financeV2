@@ -1,4 +1,4 @@
-"""application/init.py."""
+"""application/init."""
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
