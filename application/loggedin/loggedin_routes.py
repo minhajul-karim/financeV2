@@ -21,34 +21,34 @@ loggedin_bp.add_app_template_filter(usd)
 @login_required
 def home():
     """Show portfolio of stocks."""
-    grand_total = 0
+    try:
+        grand_total = 0
 
-    # List of transactions of a user
-    # transactions = Transaction.query.filter_by(
-    #     user_id=session["user_id"]).order_by(Transaction.symbol.asc()).all()
+        # List of transactions of a user
+        transactions = Transaction.query.filter_by(
+            user_id=session["user_id"]).order_by(Transaction.symbol.asc()).all()
 
-    transactions = Transaction.query.filter_by(
-        user_id=session["user_id"]).all()
+        if transactions:
+            for transaction in transactions:
+                # Get information about a stock
+                info = lookup(transaction.symbol)
+                if info:
+                    total_per_stock = transaction.shares * info["price"]
+                    grand_total += total_per_stock
 
-    if transactions:
-        for transaction in transactions:
-            # Get information about a stock
-            info = lookup(transaction.symbol)
-            if info:
-                total_per_stock = transaction.shares * info["price"]
-                grand_total += total_per_stock
+                    # Add new properties to transaction object
+                    transaction.name = info["name"]
+                    transaction.price = info["price"]
+                    transaction.total = total_per_stock
 
-                # Add new properties to transaction object
-                transaction.name = info["name"]
-                transaction.price = info["price"]
-                transaction.total = total_per_stock
+        # Check user's available balance
+        current_cash = (User.query.filter_by(id=session["user_id"]).first()).cash
+        grand_total += current_cash
 
-    # Check user's available balance
-    current_cash = (User.query.filter_by(id=session["user_id"]).first()).cash
-    grand_total += current_cash
-
-    # Render index template
-    return render_template("index.html", transactions=transactions, current_cash=current_cash, grand_total=grand_total)
+        # Render index template
+        return render_template("index.html", transactions=transactions, current_cash=current_cash, grand_total=grand_total)
+    except Exception as e:
+        return str(e)
 
 
 @loggedin_bp.route("/quote", methods=["GET", "POST"])

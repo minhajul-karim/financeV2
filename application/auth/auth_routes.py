@@ -89,10 +89,8 @@ def login():
             return sorry("your password is incorrenct")
 
         # Remember which user has logged in
-        session["user_id"] = user_exists.id
-
-        # Save email to the sesssion
-        session["first_name"] = user_exists.first_name
+        session["user_id"], session[
+            "first_name"] = user_exists.id, user_exists.first_name
 
         # Send the flash message to homepage
         flash("Welcome!")
