@@ -94,6 +94,7 @@ def login():
 
         # Send the flash message to homepage
         flash("Welcome!")
+        print("Coming Home....")
 
         # Redirect user to home page
         return redirect(url_for("loggedin_bp.home"))

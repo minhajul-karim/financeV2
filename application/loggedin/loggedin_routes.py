@@ -1,7 +1,6 @@
 """application/init."""
 
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
-from werkzeug.exceptions import InternalServerError
 from dateutil import tz
 from ..helpers import login_required, lookup, usd, sorry
 from ..models import User, Transaction, History
@@ -25,9 +24,12 @@ def home():
     try:
         grand_total = 0
 
+        print("IN Try Block, Before the Query")
         # List of transactions of a user
         transactions = Transaction.query.filter_by(
             user_id=session["user_id"]).order_by(Transaction.symbol.asc()).all()
+
+        print("After the query")
 
         if transactions:
             for transaction in transactions:
@@ -53,9 +55,8 @@ def home():
                                current_cash=current_cash,
                                grand_total=grand_total)
 
-    except InternalServerError:
-        # return sorry("something is broken! Please consider reloading.")
-        pass
+    except Exception as e:
+        return str(e)
 
 
 @loggedin_bp.route("/quote", methods=["GET", "POST"])
