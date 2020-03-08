@@ -24,12 +24,9 @@ def home():
     try:
         grand_total = 0
 
-        print("IN Try Block, Before the Query")
         # List of transactions of a user
         transactions = Transaction.query.filter_by(
             user_id=session["user_id"]).order_by(Transaction.symbol.asc()).all()
-
-        print("After the query")
 
         if transactions:
             for transaction in transactions:
