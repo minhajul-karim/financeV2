@@ -1,113 +1,61 @@
-"""This blueprint contains all functions to authenticate users."""
+"""Blueprint to authenticate users."""
 
 import os
 import secrets
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask_login import login_required, logout_user, login_user
 from flask_mail import Message
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash
 from ..helpers import sorry
-from ..forms import SignInForm, RegistrationForm, ResetPasswordForm, UpdatePasswordForm
+from ..forms import SignupForm, ResetPasswordForm, UpdatePasswordForm
 from ..models import User, ResetPassword
-from .. import db, mail
+from .. import db, mail, login_manager
 
 # Set up a Blueprint
 auth_bp = Blueprint("auth_bp", __name__,
                     template_folder="templates")
 
 
-@auth_bp.route("/register", methods=["GET", "POST"])
-def register():
-    """Register user."""
-    form = RegistrationForm()
+@auth_bp.route("/signup", methods=["GET", "POST"])
+def signup():
+    """
+    User Sign-up Page.
 
-    # When form has been validated
-    if form.validate_on_submit():
+    GET: Serve Sign-up page.
+    POST: If form is valid and new user creation succeeds, redirect user to the logged-in homepage.
+    """
+    signup_form = SignupForm()
+    if request.method == "POST":
+        if signup_form.validate_on_submit():
+            first_name = signup_form.first_name.data
+            last_name = signup_form.last_name.data
+            email = signup_form.email.data
+            password = signup_form.password.data
+            existing_user = User.query.filter_by(
+                email=email).first()  # Check if user exists
 
-        # Clear any previous session
-        session.clear()
+            if existing_user is None:
+                user = User(first_name=first_name,
+                            last_name=last_name,
+                            email=email)
+                user.set_password(password)
+                db.session.add(user)
+                db.session.commit()  # Create new user
+                login_user(user)  # Login as newly created user
+                return redirect(url_for("loggedin_bp.portfolio"))
+            flash("A user already exists with that email address.")
+            return redirect(url_for(".signup"))
 
-        # To Do: Validatoin for existing emails using wtform
-
-        # Check if email alrady exists
-        user_exists = User.query.filter_by(
-            email=request.form.get("email")).first()
-        if user_exists:
-            return sorry("someone's already using that email")
-
-        # Insert data into database
-        new_user = User(first_name=request.form.get("first_name"),
-                        last_name=request.form.get("last_name"),
-                        email=request.form.get("email"))
-        new_user.pwd_generator(request.form.get("password"))
-        db.session.add(new_user)
-        db.session.commit()
-
-        # Save user id to the sesssion
-        session["user_id"] = new_user.id
-
-        # Save email to the sesssion
-        session["first_name"] = request.form.get("first_name")
-
-        # Send the flash message to homepage
-        flash("Congrats!")
-
-        db.session.close()
-
-        # Redirect user to home page
-        return redirect(url_for("loggedin_bp.home"))
-        # return "Return to homepage"
-
-    return render_template("register.html", form=form)
-
-
-@auth_bp.route("/login", methods=["GET", "POST"])
-def login():
-    """Log user in."""
-    form = SignInForm()
-
-    # When form has been validated
-    if form.validate_on_submit():
-
-        # Clear any previous session
-        session.clear()
-
-        """
-            To Do: Validatoin for incorrect password using wtform
-        """
-
-        # Find email
-        user_exists = (User.query.filter_by(
-            email=request.form.get("email"))).first()
-
-        # Check email
-        if not user_exists:
-            return sorry("your email is incorrenct")
-
-        # Check password
-        if not user_exists.pwd_checker(request.form.get("password")):
-            return sorry("your password is incorrenct")
-
-        # Remember which user has logged in
-        session["user_id"], session[
-            "first_name"] = user_exists.id, user_exists.first_name
-
-        # Send the flash message to homepage
-        flash("Welcome!")
-
-        # Redirect user to home page
-        return redirect(url_for("loggedin_bp.home"))
-
-    return render_template('login.html', form=form)
+    return render_template("signup.html", form=signup_form)
 
 
 @auth_bp.route("/logout")
+@login_required
 def logout():
-    """Log user out."""
-    session.clear()
-
-    # Redirect user to login form
-    return redirect(url_for("loggedin_bp.home"))
+    """Log User Out."""
+    logout_user()
+    return redirect(url_for("landing_bp.home"))
 
 
 @auth_bp.route("/password_reset", methods=["GET", "POST"])
@@ -232,3 +180,18 @@ def update_password():
 
     else:
         return render_template("update_password.html", form=form, email=email)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    """Check if user is logged-in on every page load."""
+    if user_id is not None:
+        return User.query.get(user_id)
+    return None
+
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    """Redirect unauthorized users to login page."""
+    flash("You must be logged in to view this page.")
+    return redirect(url_for("landing_bp.home"))

@@ -1,15 +1,17 @@
-"""application/init."""
+"""Initialize app."""
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 from flask_session import Session
+from flask_login import LoginManager
 
 
 # Globally accessible libraries
 db = SQLAlchemy()
 mail = Mail()
 sess = Session()
+login_manager = LoginManager()
 
 
 def create_app():
@@ -23,6 +25,7 @@ def create_app():
     db.init_app(app)
     mail.init_app(app)
     sess.init_app(app)
+    login_manager.init_app(app)
 
     with app.app_context():
 

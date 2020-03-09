@@ -1,8 +1,9 @@
 """application/init."""
 
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask_login import login_required, current_user
 from dateutil import tz
-from ..helpers import login_required, lookup, usd, sorry
+from ..helpers import lookup, usd, sorry
 from ..models import User, Transaction, History
 from ..forms import QuoteForm, BuyForm, SellForm
 from .. import db
@@ -17,21 +18,20 @@ loggedin_bp = Blueprint("loggedin_bp", __name__,
 loggedin_bp.add_app_template_filter(usd)
 
 
-@loggedin_bp.route("/", methods=["GET"])
+@loggedin_bp.route("/portfolio", methods=["GET"])
 @login_required
-def home():
+def portfolio():
     """Show portfolio of stocks."""
     try:
         grand_total = 0
 
         # List of transactions of a user
         transactions = Transaction.query.filter_by(
-            user_id=session["user_id"]).order_by(Transaction.symbol.asc()).all()
+            user_id=current_user.id).order_by(Transaction.symbol.asc()).all()
 
         if transactions:
             for transaction in transactions:
-                # Get information about a stock
-                info = lookup(transaction.symbol)
+                info = lookup(transaction.symbol)  # Get information about a stock
                 if info:
                     total_per_stock = transaction.shares * info["price"]
                     grand_total += total_per_stock
@@ -42,18 +42,17 @@ def home():
                     transaction.total = total_per_stock
 
         # Check user's available balance
-        current_cash = (User.query.filter_by(
-            id=session["user_id"]).first()).cash
+        current_cash = current_user.cash
         grand_total += current_cash
 
         # Render index template
-        return render_template("index.html",
+        return render_template("portfolio.html",
                                transactions=transactions,
                                current_cash=current_cash,
                                grand_total=grand_total)
 
-    except Exception as e:
-        return str(e)
+    except:
+        return sorry("something is wrong! Please reload.")
 
 
 @loggedin_bp.route("/quote", methods=["GET", "POST"])

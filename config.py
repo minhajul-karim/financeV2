@@ -14,7 +14,6 @@ class Config:
     # Database
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_POOL_SIZE = 0
 
     # Email
     DEBUG = True

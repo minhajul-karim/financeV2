@@ -7,13 +7,14 @@
 {% block main %}
 
 <div id="registration-area">
-    <form action="{{ url_for('auth_bp.register') }}" method="POST" id="reg_form">
+    
+    <form action="{{ url_for('.signup') }}" method="POST" id="reg_form">
         {{ form.csrf_token }}
 
         <!-- Error Message -->
 
         {% for message in get_flashed_messages() %}
-            <div class="alert alert-warning">
+            <div class="alert alert-danger">
                 <button type="button" class="close" data-dismiss="alert">&times;</button>
                 {{ message }}
             </div>
@@ -88,9 +89,11 @@
 
         {{ form.submit(class="btn btn-primary") }}
     </form>
-    <div class="loginsignup">
-      <span>Already have an account? <a href="#">Log in.</a></span>
+
+    <div id="bottom-text" class="mt-3">
+        <p>Already have an account? <a href="#">Log in.</a></p>
     </div>
+
 </div>
 
 {% endblock %}
