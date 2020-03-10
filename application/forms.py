@@ -1,80 +1,91 @@
+"""Definations of forms."""
+
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, SubmitField, IntegerField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, Regexp, NumberRange
 
 
-class SignInForm(FlaskForm):
-    """SignIn form"""
+class SignupForm(FlaskForm):
+    """User Signup Form."""
 
-    email = StringField("Email", validators=[DataRequired(message="Please provide your email."),
-                                             Email(message="Please enter a valid email address.")])
-    password = PasswordField("Password", validators=[
-                             DataRequired(message="Please provide your password.")])
-    submit = SubmitField("Login")
-
-
-class RegistrationForm(FlaskForm):
-    """Registration form"""
-
-    first_name = StringField("first_name", validators=[
-                             DataRequired(message="Please proivde your first name.")])
-    last_name = StringField("last_name", validators=[
-                            DataRequired(message="Please proivde your last name.")])
+    first_name = StringField("first_name",
+                             validators=[DataRequired(message="Please proivde your first name.")])
+    last_name = StringField("last_name",
+                            validators=[DataRequired(message="Please proivde your last name.")])
     email = StringField("email", validators=[DataRequired(message="Please provide your email address."),
                                              Email(message="Please provide a valid email address.")])
-    password = PasswordField("password", validators=[DataRequired(message="Please provide a password."),
-                                                     Length(
-                                                         min=5, message="Password must contain more than 5 characters."),
-                                                     Regexp("^(?=.*[A-Z]+)(?=.*[!@#$&*])(?=.*[0-9]+)(?=.*[a-z]+).{5,}$", message="Password must contain an uppercase, digit & special character.")])
-    confirm_password = PasswordField("confirm_password", validators=[DataRequired(message="Please provide password again."),
-                                                                     EqualTo("password", message="Passwords must match.")])
+    password = PasswordField("password",
+                             validators=[DataRequired(message="Please provide a password."),
+                                         Length(
+                                             min=5, message="Password must contain at least 5 characters."),
+                                         Regexp("^(?=.*[A-Z]+)(?=.*[!@#$&*])(?=.*[0-9]+)(?=.*[a-z]+).{5,}$", message="Password must contain an uppercase, digit & special character.")])
+    confirm_password = PasswordField("confirm_password",
+                                     validators=[DataRequired(message="Please provide password again."),
+                                                 EqualTo("password", message="Passwords must match.")])
     submit = SubmitField("Register")
 
 
-class BuyForm(FlaskForm):
-    """Class To Buy Form"""
+class LoginForm(FlaskForm):
+    """User Login Form."""
 
-    symbol = StringField("symbol", validators=[
-                         DataRequired(message="Must provide a symbol")])
-    shares = IntegerField("Number of shares", validators=[DataRequired(message="Please provide number of shares."),
-                                                          NumberRange(min=1, max=100, message="Shares must be between 1 and 100.")])
+    email = StringField("Email",
+                        validators=[DataRequired(message="Please provide your email."),
+                                    Email(message="Please enter a valid email address.")])
+    password = PasswordField("Password",
+                             validators=[DataRequired(message="Please provide your password.")])
+    submit = SubmitField("Login")
+
+
+class BuyForm(FlaskForm):
+    """Buy Shares Form."""
+
+    symbol = StringField("symbol",
+                         validators=[DataRequired(message="Must provide a symbol")])
+    shares = IntegerField("Number of shares",
+                          validators=[DataRequired(message="Please provide number of shares."),
+                                      NumberRange(min=1, max=100, message="Shares must be between 1 and 100.")])
     submit = SubmitField("Buy")
 
 
 class SellForm(FlaskForm):
-    """Sell Form"""
+    """Sell Shares Form."""
 
-    symbol = SelectField("Symbol", validators=[
-                         DataRequired(message="Please select a stock.")])
-    shares = IntegerField("Number of shares", validators=[DataRequired(message="Please provide number of shares."),
-                                                          NumberRange(min=1, max=100, message="Shares must be between 1 and 100.")])
+    symbol = SelectField("Symbol",
+                         validators=[DataRequired(message="Please select a stock.")])
+    shares = IntegerField("Number of shares",
+                          validators=[DataRequired(message="Please provide number of shares."),
+                                      NumberRange(min=1, max=100, message="Shares must be between 1 and 100.")])
     submit = SubmitField("Sell")
 
 
 class QuoteForm(FlaskForm):
-    """Quote Form"""
+    """Quote Form."""
 
-    symbol = StringField("symbol", validators=[
-                         DataRequired(message="Must provide a symbol")])
+    symbol = StringField("symbol",
+                         validators=[DataRequired(message="Must provide a symbol")])
     submit = SubmitField("Quote")
 
 
 class ResetPasswordForm(FlaskForm):
-    """Reset Password Form"""
+    """Reset Password Form."""
 
-    email = StringField("Email", validators=[DataRequired(message="Please provide your email."),
-                                             Email(message="Please enter a valid email address.")])
+    email = StringField("Email",
+                        validators=[DataRequired(message="Please provide your email."),
+                                    Email(message="Please enter a valid email address.")])
     submit = SubmitField("Submit")
 
 
 class UpdatePasswordForm(FlaskForm):
-    """Update Password"""
+    """Update Password Form."""
 
-    email = StringField("email", validators=[DataRequired()])
-    password = PasswordField("password", validators=[DataRequired(message="Please provide a password."),
-                                                     Length(
-                                                         min=5, message="Password must contain more than 5 characters."),
-                                                     Regexp("^(?=.*[A-Z]+)(?=.*[!@#$&*])(?=.*[0-9]+)(?=.*[a-z]+).{5,}$", message="Password must contain an uppercase, digit & special character.")])
-    confirm_password = PasswordField("confirm_password", validators=[DataRequired(message="Please provide password again."),
-                                                                     EqualTo("password", message="Passwords must match.")])
+    email = StringField("email",
+                        validators=[DataRequired()])
+    password = PasswordField("password",
+                             validators=[DataRequired(message="Please provide a password."),
+                                         Length(
+                                             min=5, message="Password must contain more than 5 characters."),
+                                         Regexp("^(?=.*[A-Z]+)(?=.*[!@#$&*])(?=.*[0-9]+)(?=.*[a-z]+).{5,}$", message="Password must contain an uppercase, digit & special character.")])
+    confirm_password = PasswordField("confirm_password",
+                                     validators=[DataRequired(message="Please provide password again."),
+                                                 EqualTo("password", message="Passwords must match.")])
     submit = SubmitField("Update")

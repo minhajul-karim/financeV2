@@ -7,6 +7,9 @@
 {% block main %}
     <form action="{{ url_for('loggedin_bp.buy') }}" method="POST" id="buy_form">
         {{ form.csrf_token }}
+
+        <!-- Symbol -->
+
         <div class="form-group">
             {% if symbol %}
                 {{ form.symbol(class="form-control", value=symbol) }}
@@ -14,9 +17,15 @@
                 {{ form.symbol(class="form-control", placeholder="Symbol(e.g., NFLX)") }}
             {% endif %}
         </div>
+
+        <!-- Number of shares -->
+
         <div class="form-group">
-            {{ form.shares(class="form-control", placeholder="Number of shares") }}
+            {{ form.shares(class="form-control", placeholder="Number of shares", autocomplete="off") }}
         </div>
+
+        <!-- Submit -->
+
         {{ form.submit(class="btn btn-primary") }}
     </form>
 {% endblock %}

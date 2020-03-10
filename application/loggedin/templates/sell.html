@@ -7,9 +7,15 @@
 {% block main %}
     <form action="{{ url_for('loggedin_bp.sell') }}" method="POST" id="sell-form">
         {{ form.csrf_token }}
+
+        <!-- Symbol Dropdown -->
+
         <div class="form-group">
             {{ form.symbol(class="custom-select w-25") }}
         </div>
+
+        <!-- Shares -->
+
         <div class="form-group">
             {{ form.shares(class="form-control", placeholder="Shares", autocomplete="off") }}
             <ul>
@@ -20,6 +26,9 @@
                 {% endif %}
             </ul>
         </div>
+
+        <!-- Submit -->
+
         {{ form.submit(class="btn btn-primary") }}
     </form>
 {% endblock %}

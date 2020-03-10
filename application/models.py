@@ -1,68 +1,122 @@
+"""Define DB Models."""
+
 from . import db
 from datetime import datetime
+from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
-class User(db.Model):
-    """Model for user information"""
+class User(UserMixin, db.Model):
+    """Model for user accounts."""
 
+    __talbename__ = "users"
     __table_args__ = {"extend_existing": True}
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(20), nullable=False)
-    last_name = db.Column(db.String(20), nullable=False)
-    email = db.Column(db.String(40), nullable=False)
-    hash = db.Column(db.String(200), nullable=False)
-    cash = db.Column(db.Float, nullable=False, default=10000.00)
 
-    # Methods
-    def pwd_generator(self, pwd):
-        self.hash = generate_password_hash(pwd)
+    id = db.Column(db.Integer,
+                   primary_key=True)
+    first_name = db.Column(db.String(20),
+                           nullable=False,
+                           unique=False)
+    last_name = db.Column(db.String(20),
+                          nullable=False,
+                          unique=False)
+    email = db.Column(db.String(40),
+                      nullable=False,
+                      unique=True)
+    password = db.Column(db.String(200),
+                         nullable=False,
+                         unique=False,
+                         primary_key=False)
+    cash = db.Column(db.Float,
+                     nullable=False,
+                     unique=False,
+                     default=10000.00)
 
-    def pwd_checker(self, pwd):
-        return check_password_hash(self.hash, pwd)
+    def set_password(self, password):
+        """Create hashed password."""
+        self.password = generate_password_hash(password)
+
+    def check_password(self, password):
+        """Check password."""
+        return check_password_hash(self.password, password)
 
     def __repr__(self):
-        return f"<User(id={self.id}, first_name={self.first_name}, last_name={self.last_name}, email={self.email}, cash={self.cash})>"
+        """Object representation."""
+        return "<User {}>".format(self.first_name)
 
 
 class Transaction(db.Model):
-    """Model for transaction information"""
+    """Model for transaction information."""
 
+    __talbename__ = "transactions"
     __table_args__ = {"extend_existing": True}
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
-    symbol = db.Column(db.String(10), nullable=False)
-    shares = db.Column(db.Integer, nullable=False)
+
+    id = db.Column(db.Integer,
+                   primary_key=True)
+    user_id = db.Column(db.Integer,
+                        nullable=False,
+                        unique=False)
+    symbol = db.Column(db.String(10),
+                       nullable=False,
+                       unique=False)
+    shares = db.Column(db.Integer,
+                       nullable=False,
+                       unique=False)
 
     def __repr__(self):
-        return f"<Transaction(id={self.id}, user_id={self.user_id}, symbol={self.symbol}, shares={self.shares})>"
+        """Object representation."""
+        return "<Transaction {}>".format(self.id)
 
 
 class History(db.Model):
-    """Model for user's transaction history"""
+    """Model for user's transaction history."""
 
+    __talbename__ = "history"
     __table_args__ = {"extend_existing": True}
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
-    symbol = db.Column(db.String(10), nullable=False)
-    shares = db.Column(db.Integer, nullable=False)
-    cost = db.Column(db.Float, nullable=False)
-    transaction_time = db.Column(
-        db.DateTime, nullable=False, default=datetime.utcnow)
+
+    id = db.Column(db.Integer,
+                   primary_key=True)
+    user_id = db.Column(db.Integer,
+                        nullable=False,
+                        unique=False)
+    symbol = db.Column(db.String(10),
+                       nullable=False,
+                       unique=False)
+    shares = db.Column(db.Integer,
+                       nullable=False,
+                       unique=False)
+    cost = db.Column(db.Float,
+                     nullable=False,
+                     unique=False)
+    transaction_time = db.Column(db.DateTime,
+                                 nullable=False,
+                                 unique=False,
+                                 default=datetime.utcnow)
 
     def __repr__(self):
-        return f"<History(id={self.id}, user_id={self.user_id}, symbol={self.symbol}, shares={self.shares}, cost={self.cost}, transaction_time={self.transaction_time})>"
+        """Object representation."""
+        return "<History {}>".format(self.id)
 
 
 class ResetPassword(db.Model):
-    """Model for password reset"""
+    """Model for password reset."""
 
+    __talbename__ = "reset-password"
     __table_args__ = {"extend_existing": True}
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(40), nullable=False)
-    token = db.Column(db.String, nullable=False)
-    expiration_time = db.Column(
-        db.DateTime, default=datetime.utcnow, nullable=False)
+
+    id = db.Column(db.Integer,
+                   primary_key=True)
+    email = db.Column(db.String(40),
+                      nullable=False,
+                      unique=True)
+    token = db.Column(db.String,
+                      nullable=False,
+                      unique=False)
+    expiration_time = db.Column(db.DateTime,
+                                unique=False,
+                                nullable=False,
+                                default=datetime.utcnow)
 
     def __repr__(self):
-        return f"<ResetPassword(id={self.id}, token={self.token}, expiration_time={self.expiration_time})>"
+        """Object representation."""
+        return "<ResetPassword {}>".format(self.id)

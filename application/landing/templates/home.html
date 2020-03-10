@@ -24,15 +24,6 @@
             <form action="{{ url_for('.home') }}" method="POST">
                 {{ form.csrf_token }}
 
-                <!-- Error Message -->
-                
-                {% for message in get_flashed_messages() %}
-                    <div class="alert alert-info">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        {{ message }}
-                    </div>
-                {% endfor %}
-
                 <!-- Email -->
 
                 <div class="form-group">
@@ -65,8 +56,8 @@
                 {{ form.submit(class="btn btn-primary") }}
             </form>
 
-            <a href="{{ url_for('.password_reset') }}" id="forget-password">Forgot Password?</a>
-            <p class="lead">New to Finance? <a href="{{ url_for('.signup') }}">Join Now!</a></p>
+            <a href="{{ url_for('auth_bp.password_reset') }}" id="forget-password">Forgot Password?</a>
+            <p class="lead">New to Finance? <a href="{{ url_for('auth_bp.signup') }}">Join Now!</a></p>
         </div>
     </div>
     

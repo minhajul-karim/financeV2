@@ -1,8 +1,9 @@
 """application/init."""
 
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask_login import login_required, current_user
 from dateutil import tz
-from ..helpers import login_required, lookup, usd, sorry
+from ..helpers import lookup, usd, sorry
 from ..models import User, Transaction, History
 from ..forms import QuoteForm, BuyForm, SellForm
 from .. import db
@@ -17,16 +18,16 @@ loggedin_bp = Blueprint("loggedin_bp", __name__,
 loggedin_bp.add_app_template_filter(usd)
 
 
-@loggedin_bp.route("/", methods=["GET"])
+@loggedin_bp.route("/portfolio", methods=["GET"])
 @login_required
-def home():
+def portfolio():
     """Show portfolio of stocks."""
     try:
         grand_total = 0
 
         # List of transactions of a user
         transactions = Transaction.query.filter_by(
-            user_id=session["user_id"]).order_by(Transaction.symbol.asc()).all()
+            user_id=current_user.id).order_by(Transaction.symbol.asc()).all()
 
         if transactions:
             for transaction in transactions:
@@ -42,18 +43,17 @@ def home():
                     transaction.total = total_per_stock
 
         # Check user's available balance
-        current_cash = (User.query.filter_by(
-            id=session["user_id"]).first()).cash
+        current_cash = current_user.cash
         grand_total += current_cash
 
         # Render index template
-        return render_template("index.html",
+        return render_template("portfolio.html",
                                transactions=transactions,
                                current_cash=current_cash,
                                grand_total=grand_total)
 
-    except Exception as e:
-        return str(e)
+    except:
+        return sorry("something is wrong! Please reload.")
 
 
 @loggedin_bp.route("/quote", methods=["GET", "POST"])
@@ -81,164 +81,130 @@ def quote():
 @login_required
 def buy():
     """Buy shares of stock."""
-    form = BuyForm()
-
     # If GET request sent from 'sell this' button
-    symbol = request.args.get("symbol")
+    selected_symbol = request.args.get("symbol")
 
-    # When form is validated
-    if form.validate_on_submit():
+    buy_form = BuyForm()
+    if request.method == "POST":
+        if buy_form.validate_on_submit():
+            symbol = buy_form.symbol.data
+            shares = buy_form.shares.data
 
-        # Check if shares are negative
-        if request.form.get("shares")[0] == "-":
-            return sorry("shares must not be negative", 400)
+            # Get data for given symbol
+            info = lookup(symbol)
+            if info:
+                new_cost = shares * float(info["price"])
+                current_balance = (User.query.filter_by(
+                    id=current_user.id).first()).cash
+                if new_cost > current_balance:
+                    flash("You don't have enough cash!")
+                    return redirect(url_for(".buy"))
 
-        # Check if shares are float
-        elif not request.form.get("shares").replace(".", "", 1).isdigit():
-            return sorry("shares must not be fractional", 400)
+                # Calculate new cash after successful purchase
+                updated_cash = current_balance - new_cost
 
-        # Check if shares are non-numeric
-        elif not request.form.get("shares").isdigit():
-            return sorry("shares must be numeric", 400)
+                # Check if user has purchased same stock before
+                prev_purchase = Transaction.query.filter_by(user_id=current_user.id,
+                                                            symbol=info["symbol"]).first()
+                if prev_purchase:
+                    current_shares = prev_purchase.shares
+                    updated_shares = current_shares + shares
 
-        # Get data for given symbol
-        info = lookup(request.form.get("symbol"))
+                    # Update transactions table
+                    prev_purchase.shares = updated_shares
 
-        # Data available
-        if info:
+                    # Update users table
+                    user_info = User.query.filter_by(
+                        id=current_user.id).first()
+                    user_info.cash = updated_cash
 
-            # Calculate new cost
-            new_cost = int(request.form.get("shares")) * float(info["price"])
+                else:
+                    new_purchase = Transaction(user_id=current_user.id,
+                                               symbol=info["symbol"],
+                                               shares=request.form.get("shares"))
+                    db.session.add(new_purchase)
 
-            # Check user's available balance
-            current_balance = (User.query.filter_by(
-                id=session["user_id"]).first()).cash
+                    # Update cash of users table
+                    user_info = User.query.filter_by(
+                        id=current_user.id).first()
+                    user_info.cash = updated_cash
 
-            # Check user's affordability
-            if new_cost > current_balance:
-                return sorry("you don't have enough cash")
-
-            # Calculate new cash
-            updated_cash = current_balance - new_cost
-
-            # Check if user has purchased same stock before
-            prev_purchase = Transaction.query.filter_by(user_id=session["user_id"],
-                                                        symbol=info["symbol"]).first()
-
-            if prev_purchase:
-                """Update shares if user has already purchased a stock before"""
-
-                # Get the current number of shares
-                current_shares = prev_purchase.shares
-
-                # Calculate updated shares
-                updated_shares = current_shares + \
-                    int(request.form.get("shares"))
-
-                # Update transactions table
-                prev_purchase.shares = updated_shares
-
-                # Update users table
-                user_info = User.query.filter_by(id=session["user_id"]).first()
-                user_info.cash = updated_cash
+                # Update history table
+                transaction_history = History(user_id=current_user.id,
+                                              symbol=info["symbol"],
+                                              shares=request.form.get(
+                                                  "shares"),
+                                              cost=new_cost)
+                db.session.add(transaction_history)
+                db.session.commit()
+                db.session.close()
 
             else:
-                """Insert data into transactions table"""
+                flash("Invalid symbol!")
+                return redirect(url_for(".buy"))
 
-                # Insert transactions table
-                new_purchase = Transaction(user_id=session["user_id"],
-                                           symbol=info["symbol"],
-                                           shares=request.form.get("shares"))
-                db.session.add(new_purchase)
+            flash("Congrats! You've successfully purchased!")
+            return redirect(url_for(".portfolio"))
 
-                # Update cash of users table
-                user_info = User.query.filter_by(id=session["user_id"]).first()
-                user_info.cash = updated_cash
-
-            # Update history table
-            transaction_history = History(user_id=session["user_id"],
-                                          symbol=info["symbol"],
-                                          shares=request.form.get("shares"),
-                                          cost=new_cost)
-            db.session.add(transaction_history)
-            db.session.commit()
-            db.session.close()
-
-        # Notify user for invalid symbol
-        else:
-            return sorry("invalid symbol")
-
-        # Display flash message and redirect to homepage
-        flash("Congrats! You've successfully bought!")
-        return redirect(url_for(".home"))
-
-    # If user clicks the buy button
-    return render_template("buy.html", form=form, symbol=symbol)
+    return render_template("buy.html", form=buy_form, symbol=selected_symbol)
 
 
 @loggedin_bp.route("/sell", methods=["GET", "POST"])
 @login_required
 def sell():
     """Sell shares."""
-    form = SellForm()
+    sell_form = SellForm()
 
     # If GET request received from 'buy this' button
-    symbol = request.args.get("symbol")
+    selected_symbol = request.args.get("symbol")
 
     # Insert choices
-    if symbol:
-        form.symbol.choices = [(symbol, symbol)]
+    if selected_symbol:
+        sell_form.symbol.choices = [(selected_symbol, selected_symbol)]
     else:
-        form.symbol.choices = [(transaction.symbol, transaction.symbol) for transaction in Transaction.query.filter_by(
-            user_id=session["user_id"]).order_by(Transaction.symbol.asc()).all()]
+        sell_form.symbol.choices = [(transaction.symbol, transaction.symbol) for transaction in Transaction.query.filter_by(
+            user_id=current_user.id).order_by(Transaction.symbol.asc()).all()]
 
-    if form.validate_on_submit():
-        """If validation is successful"""
+    if request.method == "POST":
+        if sell_form.validate_on_submit():
+            symbol = sell_form.symbol.data
+            shares = sell_form.shares.data
 
-        # Number of shares of selected stock
-        selected_stock = Transaction.query.filter_by(
-            user_id=session["user_id"], symbol=request.form.get("symbol")).first()
+            selected_stock = Transaction.query.filter_by(
+                user_id=current_user.id, symbol=symbol).first()
 
-        # Restrict user from selling more shares than s/he has
-        if int(request.form.get("shares")) > selected_stock.shares:
-            return sorry("you don't have enough shares to sell", 400)
+            if shares > selected_stock.shares:
+                flash("Sorry! you don't have enough shares to sell.")
+                return redirect(url_for(".sell"))
 
-        # Get information about this stock
-        info = lookup(request.form.get("symbol"))
+            # Get information about this stock
+            info = lookup(request.form.get("symbol"))
+            selling_price = info["price"] * shares
 
-        # Current selling price
-        selling_price = info["price"] * int(request.form.get("shares"))
+            # Update the cash for the user
+            active_user = User.query.filter_by(id=current_user.id).first()
+            active_user.cash += selling_price
 
-        # Update the cash for the user
-        current_user = User.query.filter_by(id=session["user_id"]).first()
-        current_user.cash += selling_price
+            # Update Transaction table if user wills to sell all shares of a
+            # stock
+            if (shares == selected_stock.shares):
+                db.session.delete(selected_stock)
+            else:
+                selected_stock.shares -= shares
 
-        # DELETE row if user wills to sell all shares of a stock
-        if (int(request.form.get("shares")) == selected_stock.shares):
-            db.session.delete(selected_stock)
+            # Update history table
+            transaction_history = History(user_id=current_user.id,
+                                          symbol=info["symbol"],
+                                          shares=shares * -1,
+                                          cost=selling_price)
+            db.session.add(transaction_history)
+            db.session.commit()
+            db.session.close()
 
-        # Update number of shares
-        else:
-            selected_stock.shares -= int(request.form.get("shares"))
+            flash("Congrats! You've successfully sold!")
+            return redirect(url_for(".portfolio"))
 
-        # Update history table
-        transaction_history = History(user_id=session["user_id"],
-                                      symbol=info["symbol"],
-                                      shares=int(
-                                          request.form.get("shares")) * -1,
-                                      cost=selling_price)
-        db.session.add(transaction_history)
-        db.session.commit()
-
-        # Send the flash message to homepage
-        flash("Congrats! You've successfully sold!")
-
-        db.session.close()
-
-        # Return to homepage
-        return redirect(url_for(".home"))
-
-    return render_template("sell.html", form=form)
+    return render_template("sell.html", form=sell_form)
 
 
 @loggedin_bp.route("/history")
@@ -254,12 +220,9 @@ def history():
     desired_timezone = tz.gettz("Asia/Dhaka")
 
     # Get history data
-    transactions = History.query.filter_by(user_id=session["user_id"]).order_by(
+    transactions = History.query.filter_by(user_id=current_user.id).order_by(
         History.transaction_time.desc()).all()
-
     if transactions:
-        """Travarse all transactions"""
-
         for transaction in transactions:
 
             # Get information for symbol
