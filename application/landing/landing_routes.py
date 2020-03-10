@@ -32,7 +32,7 @@ def home():
                 next_page = request.args.get("next")
                 # To Do: Need to check the next_page url if its safe
                 return redirect(next_page or url_for("loggedin_bp.portfolio"))
-        flash("Invalid username/password combination")
+        flash("Invalid email/password combination")
         return redirect(url_for(".home"))
 
     return render_template("home.html", form=login_form)
