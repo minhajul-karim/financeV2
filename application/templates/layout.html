@@ -52,6 +52,18 @@
             </div>
         </nav>
 
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for message in get_flashed_messages() %}
+            <div class="alert alert-info border text-center" role="alert">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                {{ message }}
+            </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
         <main class="container-fluid p-5">
             {% block main %}{% endblock %}
         </main>

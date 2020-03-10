@@ -11,15 +11,6 @@
     <form action="{{ url_for('.signup') }}" method="POST" id="reg_form">
         {{ form.csrf_token }}
 
-        <!-- Error Message -->
-
-        {% for message in get_flashed_messages() %}
-            <div class="alert alert-danger">
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                {{ message }}
-            </div>
-        {% endfor %}
-
         <!-- First Name -->
 
         <div class="form-group">

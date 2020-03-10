@@ -24,15 +24,6 @@
             <form action="{{ url_for('.home') }}" method="POST">
                 {{ form.csrf_token }}
 
-                <!-- Error Message -->
-                
-                {% for message in get_flashed_messages() %}
-                    <div class="alert alert-danger">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        {{ message }}
-                    </div>
-                {% endfor %}
-
                 <!-- Email -->
 
                 <div class="form-group">

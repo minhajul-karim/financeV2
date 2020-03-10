@@ -44,7 +44,7 @@ def signup():
                 db.session.commit()  # Create new user
                 login_user(user)  # Login as newly created user
                 return redirect(url_for("loggedin_bp.portfolio"))
-            flash("A user already exists with that email address.")
+            flash("A user already exists with that email address!1")
             return redirect(url_for(".signup"))
 
     return render_template("signup.html", form=signup_form)
