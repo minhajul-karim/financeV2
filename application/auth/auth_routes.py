@@ -73,7 +73,7 @@ def password_reset():
                 token = secrets.token_urlsafe(32)
 
                 # Generate reset password link
-                action_url = "https://finance-stocks.herokuapp.com/req_to_change_password?token=" + token
+                action_url = "https://financev2.herokuapp.com//req_to_change_password?token=" + token
 
                 # Check if previous token exists
                 token_exists = ResetPassword.query.filter_by(
