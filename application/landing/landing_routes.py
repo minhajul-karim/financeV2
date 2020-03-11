@@ -35,10 +35,10 @@ def home():
         flash("Invalid email/password combination")
         return redirect(url_for(".home"))
 
-    return render_template("home.html", form=login_form)
+    return render_template("home.jinja2", form=login_form)
 
 
 @landing_bp.route("/faq")
 def faq():
     """Display the faq page."""
-    return render_template("faq.html")
+    return render_template("faq.jinja2")

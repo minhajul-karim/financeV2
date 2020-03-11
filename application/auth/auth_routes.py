@@ -2,12 +2,10 @@
 
 import os
 import secrets
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required, logout_user, login_user
 from flask_mail import Message
 from datetime import datetime, timedelta
-from werkzeug.security import generate_password_hash
-from ..helpers import sorry
 from ..forms import SignupForm, ResetPasswordForm, UpdatePasswordForm
 from ..models import User, ResetPassword
 from .. import db, mail, login_manager
@@ -47,7 +45,7 @@ def signup():
             flash("A user already exists with that email address!1")
             return redirect(url_for(".signup"))
 
-    return render_template("signup.html", form=signup_form)
+    return render_template("signup.jinja2", form=signup_form)
 
 
 @auth_bp.route("/logout")
@@ -61,72 +59,70 @@ def logout():
 @auth_bp.route("/password_reset", methods=["GET", "POST"])
 def password_reset():
     """Reset Password."""
-    form = ResetPasswordForm()
+    reset_password_form = ResetPasswordForm()
 
-    if form.validate_on_submit():
-        """When the form is validated"""
+    if request.method == "POST":
+        if reset_password_form.validate_on_submit():
+            email = reset_password_form.email.data
 
-        # Check if provided email is registered
-        user_exists = User.query.filter_by(
-            email=request.form.get("email")).first()
+            # Check if provided email is registered
+            user_exists = User.query.filter_by(
+                email=email).first()
+            if user_exists:
+                # Generate 32 byte token
+                token = secrets.token_urlsafe(32)
 
-        if user_exists:
+                # Generate reset password link
+                action_url = "https://finance-stocks.herokuapp.com/req_to_change_password?token=" + token
 
-            # Generate 32 byte token
-            token = secrets.token_urlsafe(32)
+                # Check if previous token exists
+                token_exists = ResetPassword.query.filter_by(
+                    email=email).first()
 
-            # Generate reset password link
-            action_url = "https://finance-stocks.herokuapp.com/req_to_change_password?token=" + token
+                if token_exists:
+                    # Update token and expiration time
+                    token_exists.token = token
+                    token_exists.expiration_time = datetime.utcnow() + timedelta(hours=24)
+                    db.session.commit()
 
-            # Check if previous token exists
-            token_exists = ResetPassword.query.filter_by(
-                email=request.form.get("email")).first()
+                else:
+                    # Insert new token and expiration time
+                    new_token = ResetPassword(email=request.form.get("email"),
+                                              token=token,
+                                              expiration_time=datetime.utcnow() + timedelta(hours=24))
+                    db.session.add(new_token)
+                    db.session.commit()
+                    db.session.close()
 
-            if token_exists:
-                """Update the previous token and expiration time"""
+                # Send mail
+                try:
+                    msg = Message("Reset Password", sender=os.environ.get("MAIL_ID"),
+                                  recipients=[request.form.get("email")])
+                    msg.html = render_template("reset_email.jinja2",
+                                               name=user_exists.first_name,
+                                               action_url=action_url)
+                    mail.send(msg)
+                    return render_template("resend.jinja2")
 
-                token_exists.token = token
-                token_exists.expiration_time = datetime.utcnow() + timedelta(hours=24)
-                db.session.commit()
+                except:
+                    flash(
+                        "Sorry! we could not send the mail to you. Please relaod or request again.")
+                    return redirect(url_for(".password_reset"))
 
             else:
-                """Insert new token and expiration time"""
+                try:
+                    msg = Message("Reset Password", sender=os.environ.get("MAIL_ID"),
+                                  recipients=[request.form.get("email")])
+                    msg.html = render_template("reset_email.jinja2")
+                    mail.send(msg)
+                    return render_template("resend.jinja2")
 
-                new_token = ResetPassword(email=request.form.get("email"),
-                                          token=token,
-                                          expiration_time=datetime.utcnow() + timedelta(hours=24))
-                db.session.add(new_token)
-                db.session.commit()
+                except:
+                    flash(
+                        "Sorry! we could not send the mail to you. Please relaod or request again.")
+                    return redirect(url_for(".password_reset"))
 
-            # Send mail
-            try:
-                msg = Message("Reset Password", sender=os.environ.get("MAIL_ID"),
-                              recipients=[request.form.get("email")])
-                msg.html = render_template("reset_email.html",
-                                           name=user_exists.first_name,
-                                           action_url=action_url)
-                mail.send(msg)
-                return render_template("resend.html")
-
-            except:
-                return sorry("we could not send the mail to you. Please relaod or request again", 500)
-            # except Exception as e:
-            #     return str(e)
-
-        # The requested email does not exists
-        else:
-            try:
-                msg = Message("Reset Password", sender=os.environ.get("MAIL_ID"),
-                              recipients=[request.form.get("email")])
-                msg.html = render_template("reset_email.html")
-                mail.send(msg)
-                return render_template("resend.html")
-
-            except:
-                return sorry("we could not send the mail to you. Please relaod or request again", 500)
-
-    db.session.close()
-    return render_template("reset.html", form=form)
+    return render_template("reset.jinja2", form=reset_password_form)
 
 
 @auth_bp.route("/req_to_change_password", methods=["GET"])
@@ -141,45 +137,46 @@ def req_to_change_password():
             return redirect(url_for(".update_password", email=token_exists.email))
 
         else:
-            return sorry("this token has expired.", 400)
+            flash("Sorry! this token has expired.")
+            return redirect(url_for(".password_reset"))
 
     else:
-        return sorry("the token does not exist.", 400)
+        flash("Sorry! this token does not exist.")
+        return redirect(url_for(".password_reset"))
 
 
 @auth_bp.route("/update_password", methods=["GET", "POST"])
 def update_password():
-    """Update user's password."""
-    form = UpdatePasswordForm()
-
     """
-        email is received via GET method from url_for(req_to_change_password).
-        This email is attached to the form as a hidden field. So, when we
-        submit the form, we can access the email address via
-        request.form.get(email) as the form wiill be submitted via POST method.
+    Update user's password.
+
+    requestee_email is received via GET method from url_for(req_to_change_password).
+    This email is attached to the form as a hidden field. So, when we
+    submit the form, we can access the email address via
+    request.form.get(email) as the form wiill be submitted via POST method.
     """
-    email = request.args.get("email")
+    requestee_email = request.args.get("email")
+    update_password_form = UpdatePasswordForm()
+    if request.method == "POST":
+        if update_password_form.validate_on_submit():
+            email = update_password_form.email.data
+            password = update_password_form.password.data
 
-    if form.validate_on_submit():
-        # Update password
-        user = User.query.filter_by(email=request.form.get("email")).first()
-        user.hash = generate_password_hash(request.form.get('password'))
+            # Update password
+            user = User.query.filter_by(
+                email=email).first()
+            user.set_password(password)
 
-        # Delete token
-        current_token = ResetPassword.query.filter_by(
-            email=request.form.get("email")).first()
-        db.session.delete(current_token)
-        db.session.commit()
+            # Delete token
+            current_token = ResetPassword.query.filter_by(
+                email=email).first()
+            db.session.delete(current_token)
+            db.session.commit()
+            login_user(user)
+            db.session.close()
+            return redirect(url_for("loggedin_bp.portfolio"))
 
-        # save id in session
-        session["user_id"] = user.id
-        session["first_name"] = user.first_name
-
-        db.session.close()
-        return redirect(url_for("home"))
-
-    else:
-        return render_template("update_password.html", form=form, email=email)
+    return render_template("update_password.jinja2", form=update_password_form, email=requestee_email)
 
 
 @login_manager.user_loader

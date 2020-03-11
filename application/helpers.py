@@ -1,3 +1,5 @@
+"""Defines some helper functions."""
+
 import os
 import requests
 import urllib.parse
@@ -19,11 +21,12 @@ def apology(message, code=400):
                          ("%", "~p"), ("#", "~h"), ("/", "~s"), ("\"", "''")]:
             s = s.replace(old, new)
         return s
-    return render_template("apology.html", top=code, bottom=escape(message)), code
+    return render_template("apology.jinja2", top=code, bottom=escape(message)), code
 
 
 def sorry(text, code=400):
-    return render_template("error.html", code=code, text=text)
+    """Aplogy text."""
+    return render_template("error.jinja2", code=code, text=text)
 
 
 def login_required(f):
@@ -42,7 +45,6 @@ def login_required(f):
 
 def lookup(symbol):
     """Look up quote for symbol."""
-
     # Contact API
     try:
         api_key = os.environ.get("API_KEY")

@@ -1,6 +1,6 @@
-"""application/init."""
+"""Defines functinalities of logged in state."""
 
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required, current_user
 from dateutil import tz
 from ..helpers import lookup, usd, sorry
@@ -47,7 +47,8 @@ def portfolio():
         grand_total += current_cash
 
         # Render index template
-        return render_template("portfolio.html",
+        flash(f"Welcome {current_user.first_name}!")
+        return render_template("portfolio.jinja2",
                                transactions=transactions,
                                current_cash=current_cash,
                                grand_total=grand_total)
@@ -60,21 +61,20 @@ def portfolio():
 @login_required
 def quote():
     """Get stock quote."""
-    form = QuoteForm()
+    quote_form = QuoteForm()
 
-    if form.validate_on_submit():
-        # Get information for given symbol
-        info = lookup(request.form.get("symbol"))
+    if request.method == "POST":
+        if quote_form.validate_on_submit():
+            symbol = quote_form.symbol.data
+            # Get information for given symbol
+            info = lookup(symbol)
+            if info:
+                return render_template('quote.jinja2', info=info)
+            else:
+                flash("Sorry! Invalid symbol.")
+                return redirect(url_for(".quote"))
 
-        # Show information
-        if info:
-            return render_template('quote.html', info=info)
-
-        # Notify for invalid symbol
-        else:
-            return sorry("invalid symbol")
-
-    return render_template("quote.html", form=form)
+    return render_template("quote.jinja2", form=quote_form)
 
 
 @loggedin_bp.route("/buy", methods=["GET", "POST"])
@@ -146,7 +146,7 @@ def buy():
             flash("Congrats! You've successfully purchased!")
             return redirect(url_for(".portfolio"))
 
-    return render_template("buy.html", form=buy_form, symbol=selected_symbol)
+    return render_template("buy.jinja2", form=buy_form, symbol=selected_symbol)
 
 
 @loggedin_bp.route("/sell", methods=["GET", "POST"])
@@ -204,7 +204,7 @@ def sell():
             flash("Congrats! You've successfully sold!")
             return redirect(url_for(".portfolio"))
 
-    return render_template("sell.html", form=sell_form)
+    return render_template("sell.jinja2", form=sell_form)
 
 
 @loggedin_bp.route("/history")
@@ -242,4 +242,4 @@ def history():
             formatted_local_time = local_time.strftime("%d-%m-%Y %I:%M:%S %p")
             transaction.transaction_time = formatted_local_time
 
-    return render_template("history.html", transactions=transactions)
+    return render_template("history.jinja2", transactions=transactions)
