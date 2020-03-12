@@ -21,7 +21,8 @@ def signup():
     User Sign-up Page.
 
     GET: Serve Sign-up page.
-    POST: If form is valid and new user creation succeeds, redirect user to the logged-in homepage.
+    POST: If form is valid and new user creation succeeds,
+    redirect user to the logged-in homepage.
     """
     signup_form = SignupForm()
     if request.method == "POST":
