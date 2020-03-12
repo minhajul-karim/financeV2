@@ -3,10 +3,10 @@
 import os
 import secrets
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-from flask_login import login_required, logout_user, login_user
+from flask_login import login_required, logout_user, login_user, current_user
 from flask_mail import Message
 from datetime import datetime, timedelta
-from ..forms import SignupForm, ResetPasswordForm, UpdatePasswordForm
+from ..forms import SignupForm, ResetPasswordForm, UpdatePasswordForm, LoginForm
 from ..models import User, ResetPassword
 from .. import db, mail, login_manager
 
@@ -43,10 +43,40 @@ def signup():
                 db.session.commit()  # Create new user
                 login_user(user)  # Login as newly created user
                 return redirect(url_for("loggedin_bp.portfolio"))
-            flash("A user already exists with that email address!1")
+            flash("This email is already registered!")
             return redirect(url_for(".signup"))
 
     return render_template("signup.jinja2", form=signup_form)
+
+
+@auth_bp.route("/login", methods=["GET", "POST"])
+def login():
+    """
+    Log-in User.
+
+    GET: Serve Home page.
+    POST: If submitted credentials of Log-in form are valid,
+    redirect user to the logged-in homepage.
+    """
+    if current_user.is_authenticated:
+        # Bypass if user is logged in
+        return redirect(url_for("loggedin_bp.portfolio"))
+
+    login_form = LoginForm()
+    if request.method == "POST":
+        if login_form.validate_on_submit():
+            email = login_form.email.data
+            password = login_form.password.data
+            user = User.query.filter_by(email=email).first()
+            if user and user.check_password(password=password):
+                login_user(user)
+                next_page = request.args.get("next")
+                # To Do: Need to check the next_page url if its safe
+                return redirect(next_page or url_for("loggedin_bp.portfolio"))
+        flash("Invalid email/password combination!")
+        return redirect(url_for(".login"))
+
+    return render_template("login.jinja2", form=login_form)
 
 
 @auth_bp.route("/logout")
@@ -93,7 +123,6 @@ def password_reset():
                                               expiration_time=datetime.utcnow() + timedelta(hours=24))
                     db.session.add(new_token)
                     db.session.commit()
-                    db.session.close()
 
                 # Send mail
                 try:
@@ -174,7 +203,7 @@ def update_password():
             db.session.delete(current_token)
             db.session.commit()
             login_user(user)
-            db.session.close()
+
             return redirect(url_for("loggedin_bp.portfolio"))
 
     return render_template("update_password.jinja2", form=update_password_form, email=requestee_email)

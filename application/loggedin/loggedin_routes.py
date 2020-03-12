@@ -46,8 +46,6 @@ def portfolio():
         current_cash = current_user.cash
         grand_total += current_cash
 
-        # Render index template
-        flash(f"Welcome {current_user.first_name}!")
         return render_template("portfolio.jinja2",
                                transactions=transactions,
                                current_cash=current_cash,
@@ -137,7 +135,6 @@ def buy():
                                               cost=new_cost)
                 db.session.add(transaction_history)
                 db.session.commit()
-                db.session.close()
 
             else:
                 flash("Invalid symbol!")
@@ -199,7 +196,6 @@ def sell():
                                           cost=selling_price)
             db.session.add(transaction_history)
             db.session.commit()
-            db.session.close()
 
             flash("Congrats! You've successfully sold!")
             return redirect(url_for(".portfolio"))
