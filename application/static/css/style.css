@@ -147,12 +147,8 @@ main img
     .w-75 {
         width: 100% !important;
     }
-}
 
-
-@media all and (max-width: 650px) {
-
-    #login-faq {
+        #login-faq {
         display: none;
     }
 
@@ -196,7 +192,7 @@ main img
 
     #reg_form {
         margin-left: 0;
-    }        
+    }
 }
 
 @media all and (max-width: 460px) {
