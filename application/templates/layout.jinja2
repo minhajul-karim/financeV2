@@ -10,13 +10,12 @@
 
         <link href="/static/img/favicon.ico" rel="icon">
 
-        <!-- documentation at http://getbootstrap.com/docs/4.1/, alternative themes at https://bootswatch.com/ -->
-        <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+        <!-- CSS files -->
+        {% assets "all_styles" %}
+            <link rel="stylesheet" href="{{ ASSET_URL }}" type="text/css">
+        {% endassets %}
 
-        <link href="/static/css/style.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" integrity="sha384-KA6wR/X5RY4zFAHpv/CnoG2UW1uogYfdnP67Uv7eULvTveboZJg0qUpmJZb5VqzN" crossorigin="anonymous">
-
-        <script src="/static/js/jquery-3.3.1.min.js"></script>
+        <!-- <script src="/static/js/jquery-3.3.1.min.js"></script> -->
 
 
         <title>Finance V2.0 - {% block title %}{% endblock %}</title>
@@ -93,9 +92,12 @@
         </footer>
 
         <!-- JS Files -->
-        <script src="/static/js/popper.min.js"></script>
+        {% assets "all_js" %}
+            <script src="{{ ASSET_URL }}"></script>
+        {% endassets %}
+        <!-- <script src="/static/js/popper.min.js"></script>
         <script src="/static/js/bootstrap.min.js"></script>
-        <script src="/static/js/myscript.js"></script>
+        <script src="/static/js/myscript.js"></script> -->
 
     </body>
 
