@@ -27,3 +27,7 @@ class Config:
     SESSION_FILE_DIR = mkdtemp()
     SESSION_PERMANENT = False
     SESSION_TYPE = "filesystem"
+
+    # Assets
+    ASSETS_DEBUG = False
+    ASSETS_AUTO_BUILD = False

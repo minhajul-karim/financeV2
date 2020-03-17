@@ -7,11 +7,13 @@ from flask_session import Session
 from flask_login import LoginManager
 
 
+
 # Globally accessible libraries
 db = SQLAlchemy()
 mail = Mail()
 sess = Session()
 login_manager = LoginManager()
+
 
 
 def create_app():
@@ -26,6 +28,7 @@ def create_app():
     mail.init_app(app)
     sess.init_app(app)
     login_manager.init_app(app)
+
 
     with app.app_context():
 
