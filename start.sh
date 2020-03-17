@@ -7,4 +7,4 @@
 # flask run
 
 # RUN IN GUNICORN SERVER
-gunicorn wsgi:app
+gunicorn -t 30 wsgi:app

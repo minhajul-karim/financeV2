@@ -5,7 +5,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 from flask_session import Session
 from flask_login import LoginManager
-
+from flask_assets import Environment
+from .assets import compile_assets
 
 
 # Globally accessible libraries
@@ -13,7 +14,7 @@ db = SQLAlchemy()
 mail = Mail()
 sess = Session()
 login_manager = LoginManager()
-
+assets = Environment()
 
 
 def create_app():
@@ -28,7 +29,7 @@ def create_app():
     mail.init_app(app)
     sess.init_app(app)
     login_manager.init_app(app)
-
+    assets.init_app(app)
 
     with app.app_context():
 
@@ -47,5 +48,6 @@ def create_app():
         app.register_blueprint(auth_routes.auth_bp)
         app.register_blueprint(loggedin_routes.loggedin_bp)
         app.register_blueprint(landing_routes.landing_bp)
+        compile_assets(assets)
 
         return app
