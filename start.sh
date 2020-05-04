@@ -1,10 +1,10 @@
 # start.sh
 
 # RUN IN Flask WSGI SERVER
-# export FLASK_APP=wsgi.py
-# export FLASK_DEBUG=1
-# export APP_CONFIG_FILE=config.ini
-# flask run
+export FLASK_APP=wsgi.py
+export FLASK_DEBUG=1
+export APP_CONFIG_FILE=config.ini
+flask run
 
 # RUN IN GUNICORN SERVER
-gunicorn -t 30 wsgi:app
+# gunicorn wsgi:app

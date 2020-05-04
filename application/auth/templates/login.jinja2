@@ -11,11 +11,11 @@
             <h1>What is Finance?</h1>
             <p class="lead">Its a web application where you can check, buy, & sell shares of stokcs listed in IEX.</p>
             
-            <h3>IEX? What's that?</h3>
+            <h3>What is IEX?</h3>
             <p class="lead">Its a stock exchange based in the United States. This is a fair, simple and transparent stock exchange dedicated to investor and issuer protection. Learn <a href="https://iextrading.com/">more</a>.</p>
 
-            <h3>Want to know more?</h3>
-            <p class="lead">Please <a href="/register">register</a> and enjoy.</p>
+            <h3>Want to see the code?</h3>
+            <p class="lead">Please go <a href="https://github.com/minhajul-karim/financev2">here.</a></p>
         </div>
 
         <!-- Login form -->
@@ -27,7 +27,7 @@
                 <!-- Email -->
 
                 <div class="form-group">
-                    {{ form.email(placeholder="Email", class="form-control") }}
+                    {{ form.email(placeholder="Email", class="form-control", value="test") }}
                     {% if form.email.errors %}
                     <ul>
                         {% for error in form.email.errors %}
@@ -41,7 +41,7 @@
 
 
                 <div class="form-group">
-                    {{ form.password(placeholder="Password", class="form-control") }}
+                    {{ form.password(placeholder="Password", class="form-control", id="login-pwd") }}
                     {% if form.password.errors %}
                     <ul>
                         {% for error in form.password.errors %}
